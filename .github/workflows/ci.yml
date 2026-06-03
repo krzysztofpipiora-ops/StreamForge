@@ -1,0 +1,45 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Install pnpm Package Manager
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Initialize Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install System Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Initialize Database Client Framework
+        run: pnpm prisma generate
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/streamforge"
+
+      - name: Execute Code Linting Standards
+        run: pnpm lint
+
+      - name: Execute Strict Static Type Analysis
+        run: pnpm typecheck
+
+      - name: Execute Automated Unit Regression Tests
+        run: pnpm test:coverage
